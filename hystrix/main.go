@@ -21,6 +21,12 @@ func main() {
 }
 
 func CallUsingCircuitBreaker(breakername string, url string, method string, body io.Reader) ([]byte, error) {
+	hystrix.ConfigureCommand(breakername, hystrix.CommandConfig{
+		Timeout:                5000,
+		SleepWindow:            5000,
+		RequestVolumeThreshold: 10,
+	})
+
 	output := make(chan []byte, 1) // declare the channel where the hystrix goroutine will put success responses.
 
 	errors := hystrix.Go(breakername, // pass the name of the circuit breaker as first parameter.
