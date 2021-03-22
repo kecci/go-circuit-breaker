@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -20,7 +20,7 @@ func main() {
 	logrus.Info(string(res))
 }
 
-func CallUsingCircuitBreaker(breakername string, url string, method string, body io.Reader) ([]byte, error) {
+func CallUsingCircuitBreaker(breakername string, url string, method string, body []byte) ([]byte, error) {
 	hystrix.ConfigureCommand(breakername, hystrix.CommandConfig{
 		Timeout:                5000,
 		SleepWindow:            5000,
@@ -34,7 +34,7 @@ func CallUsingCircuitBreaker(breakername string, url string, method string, body
 		// 2nd parameter, the inlined func to run inside the breaker.
 		func() error {
 			// create the request. omitted err handling for brevity
-			req, _ := http.NewRequest(method, url, body)
+			req, _ := http.NewRequest(method, url, bytes.NewBuffer(body))
 
 			// for hystrix, forward the err from the retrier. it's nil if successful.
 			return CallWithRetries(req, output)
@@ -78,9 +78,10 @@ func CallWithRetries(req *http.Request, output chan []byte) error {
 		// otherwise, do a bit of error logging and return the err.
 		var client = &http.Client{}
 		resp, err := client.Do(req)
-		if err == nil && resp.StatusCode < 299 {
+		if err == nil && resp.StatusCode < 500 {
 			responsebody, err := ioutil.ReadAll(resp.Body)
 			if err == nil {
+				defer resp.Body.Close()
 				output <- responsebody
 				return nil
 			}
