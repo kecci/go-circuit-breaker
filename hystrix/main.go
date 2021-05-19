@@ -18,29 +18,29 @@ func main() {
 		Timeout: 10000,
 		Retry:   1,
 	}
-	
+
 	// Build Http Request
 	request, err := http.NewRequest(http.MethodGet, "https://webhook.site/80f98c80-5cce-4fce-9eaa-c578d65ab886", nil)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	
+
 	// Call Http with circuit breaker
 	res, err := cb.CallUsingCircuitBreaker("test", request, nil)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	
+
 	log.Println(string(res))
 }
 
 var (
 	// DefaultTimeout in Millisecond
-	DefaultTimeout = 5000 // Millisecond
+	DefaultTimeout = 5000
 	// DefaultRetry in Count
-	DefaultRetry = 1 // Count
+	DefaultRetry = 1
 	// DefaultBackoff in Millisecond
-	DefaultBackoff = 0 // Millisecond
+	DefaultBackoff = 0
 )
 
 // CircuitBreaker model
